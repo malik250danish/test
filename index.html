@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>POS System - API Integration</title>
+
+    <!-- Bootstrap CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+
+    <style>
+      body {
+        background-color: #f8f9fa;
+      }
+
+      .card {
+        margin: 1rem 0;
+      }
+
+      .data-container {
+        max-height: 400px;
+        overflow-y: auto;
+      }
+
+      .spinner-border {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container mt-5">
+      <h1 class="text-center mb-4">POS System - API Integration</h1>
+
+      <!-- Buttons Section -->
+      <div class="d-flex justify-content-center gap-3 mb-5">
+        <button class="btn btn-primary" onclick="fetchProducts()">
+          Fetch Products
+        </button>
+        <button class="btn btn-secondary" onclick="fetchCategories()">
+          Fetch Categories
+        </button>
+        <button class="btn btn-info" onclick="fetchPaymentModes()">
+          Payment Modes
+        </button>
+        <button class="btn btn-success" onclick="fetchOrderTypes()">
+          Order Types
+        </button>
+        <button class="btn btn-warning" onclick="fetchCustomers()">
+          Fetch Customers
+        </button>
+        <button class="btn btn-danger" onclick="saveOrder()">Save Order</button>
+      </div>
+
+      <!-- Loading Spinner -->
+      <div class="text-center">
+        <div
+          class="spinner-border text-primary"
+          role="status"
+          id="loadingSpinner"
+        >
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+
+      <!-- Data Display Section -->
+      <div id="dataContainer" class="data-container mt-4"></div>
+    </div>
+
+    <!-- Bootstrap JS and Dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+      const apiUrl = "http://vinc.ap-south-1.elasticbeanstalk.com/api";
+
+      // Helper function to toggle the spinner visibility
+      const toggleSpinner = (isLoading) => {
+        const spinner = document.getElementById("loadingSpinner");
+        spinner.style.display = isLoading ? "inline-block" : "none";
+      };
+
+      // Helper function to render cards for the fetched data
+      const renderCards = (data, type) => {
+        const container = document.getElementById("dataContainer");
+        container.innerHTML = ""; // Clear previous content
+
+        if (!data.length) {
+          container.innerHTML = `<p class="text-center">No ${type} found.</p>`;
+          return;
+        }
+
+        data.forEach((item) => {
+          const card = document.createElement("div");
+          card.classList.add("card", "shadow-sm");
+
+          card.innerHTML = `
+            <div class="row g-0">
+                <div class="col-md-3">
+                <img src="${
+                  item.imageUrl || "https://via.placeholder.com/150"
+                }" class="img-fluid rounded-start" alt="${type}" />
+                </div>
+                <div class="col-md-9">
+                <div class="card-body">
+                    <h5 class="card-title">${
+                      item.name || item.title || "No Name"
+                    }</h5>
+                    <p class="card-text">${
+                      item.description || "No Description Available"
+                    }</p>
+                    <p class="card-text"><small class="text-muted">ID: ${
+                      item.id
+                    }</small></p>
+                </div>
+                </div>
+            </div>
+            `;
+          container.appendChild(card);
+        });
+      };
+
+      // 1. Fetch Products
+      async function fetchProducts() {
+        toggleSpinner(true);
+        try {
+          const response = await fetch(
+            `${apiUrl}/Products/POS/products?practiceId=14&branchId=0`
+          );
+          const data = await response.json();
+          renderCards(data, "Products");
+        } catch (error) {
+          console.error("Error fetching products:", error);
+        } finally {
+          toggleSpinner(false);
+        }
+      }
+
+      // 2. Fetch Categories
+      async function fetchCategories() {
+        toggleSpinner(true);
+        try {
+          const response = await fetch(
+            `${apiUrl}/Categories?practiceId=14&branchId=0`
+          );
+          const data = await response.json();
+          renderCards(data, "Categories");
+        } catch (error) {
+          console.error("Error fetching categories:", error);
+        } finally {
+          toggleSpinner(false);
+        }
+      }
+
+      // 3. Fetch Payment Modes
+      async function fetchPaymentModes() {
+        toggleSpinner(true);
+        try {
+          const response = await fetch(`${apiUrl}/PaymentModes`);
+          const data = await response.json();
+          console.log("data", data);
+          renderCards(data, "Payment Modes");
+        } catch (error) {
+          console.error("Error fetching payment modes:", error);
+        } finally {
+          toggleSpinner(false);
+        }
+      }
+
+      // 4. Fetch Order Types
+      async function fetchOrderTypes() {
+        toggleSpinner(true);
+        try {
+          const response = await fetch(`${apiUrl}/CustomerTypes?practiceId=14`);
+          const data = await response.json();
+          renderCards(data, "Order Types");
+        } catch (error) {
+          console.error("Error fetching order types:", error);
+        } finally {
+          toggleSpinner(false);
+        }
+      }
+
+      // 5. Fetch Customers
+      async function fetchCustomers() {
+        toggleSpinner(true);
+        try {
+          const response = await fetch(
+            `${apiUrl}/Customers?PageNo=1&PageSize=20&practiceId=14&branchId=0`
+          );
+          const data = await response.json();
+          renderCards(data, "Customers");
+        } catch (error) {
+          console.error("Error fetching customers:", error);
+        } finally {
+          toggleSpinner(false);
+        }
+      }
+
+      // 6. Save Order
+      async function saveOrder() {
+        const orderPayload = {
+          Id: 0,
+          invoiceItems: [
+            {
+              Id: 0,
+              productId: 1985,
+              quantity: 1,
+              rate: 1200,
+              totalAmount: 1200,
+              discount: 0,
+              saleTax: 0,
+            },
+            {
+              Id: 0,
+              productId: 1986,
+              quantity: 1,
+              rate: 550,
+              totalAmount: 550,
+              discount: 0,
+              saleTax: 0,
+            },
+            {
+              Id: 0,
+              productId: 1988,
+              quantity: 1,
+              rate: 350,
+              totalAmount: 350,
+              discount: 0,
+              saleTax: 0,
+            },
+          ],
+          SubTotal: 2100,
+          TotalSaleTax: "210.00",
+          ServiceCharges: "210.00",
+          TotalDiscount: "210.00",
+          DeliveryCharges: 0,
+          GrandTotal: 2310,
+          TotalPaid: 0,
+          DueAmount: 0,
+          PaymentModeId: 1,
+          KOTNote: "",
+          practiceId: 14,
+          userId: 17,
+          CustomerTypeId: 1,
+        };
+
+        toggleSpinner(true);
+        try {
+          const response = await fetch(`${apiUrl}/Invoices`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(orderPayload),
+          });
+
+          const data = await response.json();
+          alert("Order saved successfully!");
+          console.log("Order Saved:", data);
+        } catch (error) {
+          console.error("Error saving order:", error);
+        } finally {
+          toggleSpinner(false);
+        }
+      }
+    </script>
+  </body>
+</html>
